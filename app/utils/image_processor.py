@@ -2,6 +2,7 @@ from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
 
 def load_font(fonts_dir: Path, font_name: str, size: int):
+    # 1. Try specific requested font
     if font_name:
         fp = fonts_dir / font_name
         if fp.exists():
@@ -9,9 +10,25 @@ def load_font(fonts_dir: Path, font_name: str, size: int):
                 return ImageFont.truetype(str(fp), size)
             except Exception:
                 pass
+    
+    # 2. Try to find a reliable fallback in our fonts dir (e.g. GoogleSans or anything available)
+    try:
+        # Check specifically for GoogleSans.ttf as a good default
+        fallback_path = fonts_dir / "GoogleSans.ttf"
+        if fallback_path.exists():
+            return ImageFont.truetype(str(fallback_path), size)
+            
+        # Or try OpenSans or any other ttf file in the dir
+        for f in fonts_dir.glob("*.ttf"):
+            return ImageFont.truetype(str(f), size)
+    except Exception:
+        pass
+        
+    # 3. Try system Arial (Works on Windows, often fails on minimal Linux)
     try:
         return ImageFont.truetype("arial.ttf", size)
     except Exception:
+        # 4. Last resort: Default bitmap font (looks tiny/bad)
         return ImageFont.load_default()
 
 def _measure_text(draw: ImageDraw.Draw, text: str, font: ImageFont.FreeTypeFont):
