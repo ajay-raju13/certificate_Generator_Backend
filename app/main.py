@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -87,11 +87,11 @@ async def upload_template(file: UploadFile = File(...)):
     return {"status": "ok", "template": dest.name}
 
 @app.get("/template")
-def get_template():
+def get_template(request: Request):
     tpl = CURRENT.get("template_path")
     if not tpl or not tpl.exists():
         return {"url": None}
-    return {"url": f"http://127.0.0.1:8000/static/templates/{tpl.name}"}
+    return {"url": str(request.base_url) + f"static/templates/{tpl.name}"}
 
 @app.post("/upload-excel")
 async def upload_excel(file: UploadFile = File(...)):
